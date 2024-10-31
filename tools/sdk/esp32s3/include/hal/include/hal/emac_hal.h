@@ -171,6 +171,13 @@ typedef struct {
 
 } emac_hal_context_t;
 
+/**
+ * @brief EMAC related configuration
+ */
+typedef struct {
+    eth_mac_dma_burst_len_t dma_burst_len;  /*!< eth-type enum of chosen dma burst-len */
+} emac_hal_dma_config_t;
+
 void emac_hal_init(emac_hal_context_t *hal, void *descriptors,
                    uint8_t **rx_buf, uint8_t **tx_buf);
 
@@ -196,7 +203,7 @@ void emac_hal_set_csr_clock_range(emac_hal_context_t *hal, int freq);
 
 void emac_hal_init_mac_default(emac_hal_context_t *hal);
 
-void emac_hal_init_dma_default(emac_hal_context_t *hal);
+void emac_hal_init_dma_default(emac_hal_context_t *hal, emac_hal_dma_config_t *hal_config);
 
 void emac_hal_set_speed(emac_hal_context_t *hal, uint32_t speed);
 
@@ -246,6 +253,21 @@ esp_err_t emac_hal_stop(emac_hal_context_t *hal);
  * @return number of transmitted bytes when success
  */
 uint32_t emac_hal_transmit_frame(emac_hal_context_t *hal, uint8_t *buf, uint32_t length);
+
+/**
+ * @brief Transmit data from multiple buffers over EMAC in single Ethernet frame. Data will be joint into
+ *        single frame in order in which the buffers are stored in input array.
+ *
+ * @param[in] hal EMAC HAL context infostructure
+ * @param[in] buffs array of pointers to buffers to be transmitted
+ * @param[in] lengths array of lengths of the buffers
+ * @param[in] inbuffs_cnt number of buffers (i.e. input arrays size)
+ * @return number of transmitted bytes when success
+ *
+ * @pre @p lengths array must have the same size as @p buffs array and their elements need to be stored in the same
+ *      order, i.e. lengths[1] is a length assocaited with data buffer referenced at buffs[1] position.
+ */
+uint32_t emac_hal_transmit_multiple_buf_frame(emac_hal_context_t *hal, uint8_t **buffs, uint32_t *lengths, uint32_t inbuffs_cnt);
 
 /**
  * @brief Allocate buffer with size equal to actually received Ethernet frame size.

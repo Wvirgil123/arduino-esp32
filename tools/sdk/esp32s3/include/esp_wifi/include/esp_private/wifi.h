@@ -1,12 +1,12 @@
 /*
- * SPDX-FileCopyrightText: 2015-2023 Espressif Systems (Shanghai) CO LTD
+ * SPDX-FileCopyrightText: 2015-2024 Espressif Systems (Shanghai) CO LTD
  *
  * SPDX-License-Identifier: Apache-2.0
  */
 
 /*
  * All the APIs declared here are internal only APIs, it can only be used by
- * espressif internal modules, such as SSC, LWIP, TCPIP adapter etc, espressif
+ * espressif internal modules, such as SSC, LWIP, esp-netif etc, espressif
  * customers are not recommended to use them.
  *
  * If someone really want to use specified APIs declared in here, please contact
@@ -72,7 +72,7 @@ typedef enum {
 #define WIFI_LOG_SUBMODULE_INIT  (1)    /*logs related to initialization*/
 #define WIFI_LOG_SUBMODULE_IOCTL (1<<1) /*logs related to API calling*/
 #define WIFI_LOG_SUBMODULE_CONN  (1<<2) /*logs related to connecting*/
-#define WIFI_LOG_SUBMODULE_SCAN  (1<<3) /*logs related to scaning*/
+#define WIFI_LOG_SUBMODULE_SCAN  (1<<3) /*logs related to scanning*/
 
 
 /**
@@ -126,7 +126,7 @@ void esp_wifi_internal_free_rx_buffer(void* buffer);
   * copy to WiFi driver.
   *
   * @param  wifi_interface_t wifi_if : wifi interface id
-  * @param  void *buffer : the buffer to be tansmit
+  * @param  void *buffer : the buffer to be transmit
   * @param  uint16_t len : the length of buffer
   *
   * @return
@@ -164,9 +164,9 @@ typedef void (*wifi_netstack_buf_free_cb_t)(void *netstack_buf);
   * supports reference counter.
   *
   * @param  wifi_if : wifi interface id
-  * @param  buffer : the buffer to be tansmit
+  * @param  buffer : the buffer to be transmit
   * @param  len : the length of buffer
-  * @param  netstack_buf : the netstack buffer related to bufffer
+  * @param  netstack_buf : the netstack buffer related to buffer
   *
   * @return
   *    - ESP_OK  : Successfully transmit the buffer to wifi driver
@@ -329,6 +329,17 @@ esp_err_t esp_wifi_internal_crypto_funcs_md5_check(const char *md5);
 esp_err_t esp_wifi_internal_wifi_type_md5_check(const char *md5);
 
 /**
+  * @brief     Check the MD5 values of the esp_wifi_he_types.h in IDF and WiFi library
+  *
+  * @attention 1. It is used for internal CI version check
+  *
+  * @return
+  *     - ESP_OK : succeed
+  *     - ESP_WIFI_INVALID_ARG : MD5 check fail
+  */
+esp_err_t esp_wifi_internal_wifi_he_type_md5_check(const char *md5);
+
+/**
   * @brief     Check the MD5 values of the esp_wifi.h in IDF and WiFi library
   *
   * @attention 1. It is used for internal CI version check
@@ -338,6 +349,17 @@ esp_err_t esp_wifi_internal_wifi_type_md5_check(const char *md5);
   *     - ESP_WIFI_INVALID_ARG : MD5 check fail
   */
 esp_err_t esp_wifi_internal_esp_wifi_md5_check(const char *md5);
+
+/**
+  * @brief     Check the MD5 values of the esp_wifi_he.h in IDF and WiFi library
+  *
+  * @attention 1. It is used for internal CI version check
+  *
+  * @return
+  *     - ESP_OK : succeed
+  *     - ESP_WIFI_INVALID_ARG : MD5 check fail
+  */
+esp_err_t esp_wifi_internal_esp_wifi_he_md5_check(const char *md5);
 
 /**
   * @brief     Allocate a chunk of memory for WiFi driver
@@ -463,7 +485,7 @@ esp_err_t esp_wifi_internal_get_config_channel(wifi_interface_t ifx, uint8_t *pr
   * @param     aid : the connection number when a STA connects to the softAP
   * @param     primary : store the negotiated primary channel
   * @param     second : store the negotiated second channel
-  * @attention the aid param is only works when the ESP32 in softAP/softAP+STA mode
+  * @attention the aid param is only works when the device in softAP/softAP+STA mode
   *
   * @return
   *    - ESP_OK: succeed
@@ -517,6 +539,18 @@ void esp_wifi_power_domain_on(void);
  */
 void esp_wifi_power_domain_off(void);
 
+
+#if (CONFIG_FREERTOS_USE_TICKLESS_IDLE && SOC_PM_MODEM_RETENTION_BY_REGDMA)
+/**
+  * @brief     Get wifi mac sleep retention hardware context configuration and size
+  *
+  * @param     config_size: the wifi mac hardware context configuration size
+  *
+  * @return    A pointer that point to wifi mac sleep renteiton hardware context configuration table
+  */
+void * esp_wifi_internal_mac_retention_context_get(int *config_size);
+#endif
+
 #if CONFIG_MAC_BB_PD
 /**
   * @brief     Enable or disable powering down MAC and baseband when Wi-Fi is sleeping.
@@ -540,12 +574,12 @@ void pm_mac_wakeup(void);
 #endif
 
 /**
-  * @breif    TxDone callback function type. Should be registered using esp_wifi_set_tx_done_cb()
+  * @brief    TxDone callback function type. Should be registered using esp_wifi_set_tx_done_cb()
   *
   * @param    ifidx The interface id that the tx callback has been triggered from
   * @param    data Pointer to the data transmitted
   * @param    data_len Length of the data transmitted
-  * @param    txStatus True:if the data was transmitted sucessfully False: if data transmission failed
+  * @param    txStatus True:if the data was transmitted successfully False: if data transmission failed
   */
 typedef void (* wifi_tx_done_cb_t)(uint8_t ifidx, uint8_t *data, uint16_t *data_len, bool txStatus);
 
@@ -584,13 +618,13 @@ esp_err_t esp_wifi_internal_set_spp_amsdu(wifi_interface_t ifidx, bool spp_cap, 
 void esp_wifi_internal_update_light_sleep_default_params(int min_freq_mhz, int max_freq_mhz);
 
 /**
- * @brief   Set the delay time for wifi to enter the sleep state when light sleep
+ * @brief   Set the min active time for wifi to enter the sleep state when light sleep
  *
- * @param   return_to_sleep_delay: minimum timeout time  for waiting to receive
+ * @param   min_active_time: minimum timeout time  for waiting to receive
  *                      data, when no data is received during the timeout period,
  *                      the wifi enters the sleep process.
  */
-void esp_wifi_set_sleep_delay_time(uint32_t return_to_sleep_delay);
+void esp_wifi_set_sleep_min_active_time(uint32_t min_active_time);
 
 /**
  * @brief   Set wifi keep alive time
@@ -600,13 +634,125 @@ void esp_wifi_set_sleep_delay_time(uint32_t return_to_sleep_delay);
 void esp_wifi_set_keep_alive_time(uint32_t keep_alive_time);
 
 /**
+  * @brief      Set the min broadcast data wait time for wifi to enter the sleep state
+  *
+  * @attention  Default sleep wait broadcast data time is 15000, Uint µs.
+  *
+  * @param      time: When the station knows through the beacon that the AP
+  *                   will send broadcast packet, it will wait for a minimum of
+  *                   wait_broadcast_data_time before entering the sleep process.
+  */
+void esp_wifi_set_sleep_wait_broadcast_data_time(uint32_t time);
+
+/**
  * @brief   Configure wifi beacon montior default parameters
  *
- * @param   enable: enable or disable beacon monitor
- * @param   timeout: timeout time for close rf phy when beacon loss occurs, Unit: 1024 microsecond
- * @param   threshold: maximum number of consecutive lost beacons allowed
+ * @param   config: the configuration parameters for wifi beacon monitor
  */
-void esp_wifi_beacon_monitor_configure(bool enable, int timeout, int threshold, int delta_intr_early, int delta_timeout);
+void esp_wifi_beacon_monitor_configure(wifi_beacon_monitor_config_t *config);
+
+/**
+ * @brief   Set modem state mode to require WiFi to enable or disable Advanced DTIM sleep function
+ *
+ * @param   require_modem_state: true for require WiFi to enable Advanced DTIM sleep function,
+ *                              false for require WiFi to disable Advanced DTIM sleep function.
+ * @return
+ *    - ESP_OK: succeed
+ */
+void esp_wifi_internal_modem_state_configure(bool require_modem_state);
+
+/**
+ * @brief   Set light sleep mode to require WiFi to enable or disable Advanced DTIM sleep function
+ *
+ * @param   light_sleep_enable: true for light sleep mode is enabled, false for light sleep mode is disabled.
+ * @return
+ *    - ESP_OK: succeed
+ */
+void esp_wifi_internal_light_sleep_configure(bool light_sleep_enable);
+
+/**
+  * @brief      Start Publishing a service in the NAN cluster
+  *
+  * @attention  This API should be called after esp_wifi_start() in NAN Mode.
+  *
+  * @param      publish_cfg  Configuration parameters for publishing a service.
+  * @param      id  Identifier for the Publish service.
+  * @param      cancel  Cancel the service identified by the id.
+  *
+  * @return
+  *    - ESP_OK: succeed
+  *    - others: failed
+  */
+esp_err_t esp_nan_internal_publish_service(const wifi_nan_publish_cfg_t *publish_cfg,
+                                           uint8_t *id, bool cancel);
+
+/**
+  * @brief      Subscribe for a service within the NAN cluster
+  *
+  * @attention  This API should be called after esp_wifi_start() in NAN Mode.
+  *
+  * @param      subscribe_cfg  Configuration parameters for subscribing for a service.
+  * @param      id  Identifier for the Subscribe service.
+  * @param      cancel  Cancel the service identified by the id.
+  *
+  * @return
+  *    - ESP_OK: succeed
+  *    - others: failed
+  */
+esp_err_t esp_nan_internal_subscribe_service(const wifi_nan_subscribe_cfg_t *subscribe_cfg,
+                                             uint8_t *id, bool cancel);
+
+/**
+  * @brief      Send Follow-up to the Publisher with matching service
+  *
+  * @attention  This API should be called after WIFI_EVENT_NAN_SVC_MATCH event is received.
+  *
+  * @param      fup_params  Configuration parameters for sending a Follow-up to the Peer.
+  *
+  * @return
+  *    - ESP_OK: succeed
+  *    - others: failed
+  */
+esp_err_t esp_nan_internal_send_followup(const wifi_nan_followup_params_t *fup_params);
+
+/**
+  * @brief      Send Datapath Request to the Publisher with matching service
+  *
+  * @attention  This API should be called after WIFI_EVENT_NAN_SVC_MATCH event is received.
+  *
+  * @param      req  NAN Datapath Request parameters.
+  *
+  * @return
+  *    - ESP_OK: succeed
+  *    - others: failed
+  */
+esp_err_t esp_nan_internal_datapath_req(wifi_nan_datapath_req_t *req, uint8_t *ndp_id);
+
+/**
+  * @brief      Send Datapath Response to accept or reject the received request
+  *
+  * @attention  This API should be called on the Publisher after receiving WIFI_EVENT_NDP_INDICATION event.
+  *
+  * @param      resp  NAN Datapath Response parameters.
+  *
+  * @return
+  *    - ESP_OK: succeed
+  *    - others: failed
+  */
+esp_err_t esp_nan_internal_datapath_resp(wifi_nan_datapath_resp_t *resp);
+
+/**
+  * @brief      End NAN Datapath that is active
+  *
+  * @attention  This API should be called after receiving WIFI_EVENT_NDP_CONFIRM event.
+  *
+  * @param      req  NAN Datapath end request parameters.
+  *
+  * @return
+  *    - ESP_OK: succeed
+  *    - others: failed
+  */
+esp_err_t esp_nan_internal_datapath_end(wifi_nan_datapath_end_req_t *req);
 
 #ifdef __cplusplus
 }

@@ -68,7 +68,7 @@ static inline void esp_mbedtls_set_sha1_mode(mbedtls_sha1_context *ctx, esp_mbed
     }
 }
 
-#elif SOC_SHA_SUPPORT_DMA
+#elif SOC_SHA_SUPPORT_DMA || SOC_SHA_SUPPORT_RESUME
 
 typedef enum {
     ESP_SHA1_STATE_INIT,

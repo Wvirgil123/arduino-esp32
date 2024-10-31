@@ -1,12 +1,13 @@
 /*
- * SPDX-FileCopyrightText: 2015-2023 Espressif Systems (Shanghai) CO LTD
+ * SPDX-FileCopyrightText: 2015-2024 Espressif Systems (Shanghai) CO LTD
  *
  * SPDX-License-Identifier: Apache-2.0
  */
 
+
 /*               Notes about WiFi Programming
  *
- *  The esp32 WiFi programming model can be depicted as following picture:
+ *  WiFi programming model can be depicted as following picture:
  *
  *
  *                            default handler              user handler
@@ -33,7 +34,7 @@
  *
  * The event task is a daemon task, which receives events from WiFi driver or from other subsystem, such
  * as TCPIP stack, event task will call the default callback function on receiving the event. For example,
- * on receiving event SYSTEM_EVENT_STA_CONNECTED, it will call tcpip_adapter_start() to start the DHCP
+ * on receiving event WIFI_EVENT_STA_CONNECTED, it will call esp_netif API to start the DHCP
  * client in it's default handler.
  *
  * Application can register it's own event callback function by API esp_event_init, then the application callback
@@ -60,36 +61,38 @@
 extern "C" {
 #endif
 
-#define ESP_ERR_WIFI_NOT_INIT    (ESP_ERR_WIFI_BASE + 1)   /*!< WiFi driver was not installed by esp_wifi_init */
-#define ESP_ERR_WIFI_NOT_STARTED (ESP_ERR_WIFI_BASE + 2)   /*!< WiFi driver was not started by esp_wifi_start */
-#define ESP_ERR_WIFI_NOT_STOPPED (ESP_ERR_WIFI_BASE + 3)   /*!< WiFi driver was not stopped by esp_wifi_stop */
-#define ESP_ERR_WIFI_IF          (ESP_ERR_WIFI_BASE + 4)   /*!< WiFi interface error */
-#define ESP_ERR_WIFI_MODE        (ESP_ERR_WIFI_BASE + 5)   /*!< WiFi mode error */
-#define ESP_ERR_WIFI_STATE       (ESP_ERR_WIFI_BASE + 6)   /*!< WiFi internal state error */
-#define ESP_ERR_WIFI_CONN        (ESP_ERR_WIFI_BASE + 7)   /*!< WiFi internal control block of station or soft-AP error */
-#define ESP_ERR_WIFI_NVS         (ESP_ERR_WIFI_BASE + 8)   /*!< WiFi internal NVS module error */
-#define ESP_ERR_WIFI_MAC         (ESP_ERR_WIFI_BASE + 9)   /*!< MAC address is invalid */
-#define ESP_ERR_WIFI_SSID        (ESP_ERR_WIFI_BASE + 10)   /*!< SSID is invalid */
-#define ESP_ERR_WIFI_PASSWORD    (ESP_ERR_WIFI_BASE + 11)  /*!< Password is invalid */
-#define ESP_ERR_WIFI_TIMEOUT     (ESP_ERR_WIFI_BASE + 12)  /*!< Timeout error */
-#define ESP_ERR_WIFI_WAKE_FAIL   (ESP_ERR_WIFI_BASE + 13)  /*!< WiFi is in sleep state(RF closed) and wakeup fail */
-#define ESP_ERR_WIFI_WOULD_BLOCK (ESP_ERR_WIFI_BASE + 14)  /*!< The caller would block */
-#define ESP_ERR_WIFI_NOT_CONNECT (ESP_ERR_WIFI_BASE + 15)  /*!< Station still in disconnect status */
+#define ESP_ERR_WIFI_NOT_INIT          (ESP_ERR_WIFI_BASE + 1)   /*!< WiFi driver was not installed by esp_wifi_init */
+#define ESP_ERR_WIFI_NOT_STARTED       (ESP_ERR_WIFI_BASE + 2)   /*!< WiFi driver was not started by esp_wifi_start */
+#define ESP_ERR_WIFI_NOT_STOPPED       (ESP_ERR_WIFI_BASE + 3)   /*!< WiFi driver was not stopped by esp_wifi_stop */
+#define ESP_ERR_WIFI_IF                (ESP_ERR_WIFI_BASE + 4)   /*!< WiFi interface error */
+#define ESP_ERR_WIFI_MODE              (ESP_ERR_WIFI_BASE + 5)   /*!< WiFi mode error */
+#define ESP_ERR_WIFI_STATE             (ESP_ERR_WIFI_BASE + 6)   /*!< WiFi internal state error */
+#define ESP_ERR_WIFI_CONN              (ESP_ERR_WIFI_BASE + 7)   /*!< WiFi internal control block of station or soft-AP error */
+#define ESP_ERR_WIFI_NVS               (ESP_ERR_WIFI_BASE + 8)   /*!< WiFi internal NVS module error */
+#define ESP_ERR_WIFI_MAC               (ESP_ERR_WIFI_BASE + 9)   /*!< MAC address is invalid */
+#define ESP_ERR_WIFI_SSID              (ESP_ERR_WIFI_BASE + 10)   /*!< SSID is invalid */
+#define ESP_ERR_WIFI_PASSWORD          (ESP_ERR_WIFI_BASE + 11)  /*!< Password is invalid */
+#define ESP_ERR_WIFI_TIMEOUT           (ESP_ERR_WIFI_BASE + 12)  /*!< Timeout error */
+#define ESP_ERR_WIFI_WAKE_FAIL         (ESP_ERR_WIFI_BASE + 13)  /*!< WiFi is in sleep state(RF closed) and wakeup fail */
+#define ESP_ERR_WIFI_WOULD_BLOCK       (ESP_ERR_WIFI_BASE + 14)  /*!< The caller would block */
+#define ESP_ERR_WIFI_NOT_CONNECT       (ESP_ERR_WIFI_BASE + 15)  /*!< Station still in disconnect status */
 
-#define ESP_ERR_WIFI_POST        (ESP_ERR_WIFI_BASE + 18)  /*!< Failed to post the event to WiFi task */
-#define ESP_ERR_WIFI_INIT_STATE  (ESP_ERR_WIFI_BASE + 19)  /*!< Invalid WiFi state when init/deinit is called */
-#define ESP_ERR_WIFI_STOP_STATE  (ESP_ERR_WIFI_BASE + 20)  /*!< Returned when WiFi is stopping */
-#define ESP_ERR_WIFI_NOT_ASSOC   (ESP_ERR_WIFI_BASE + 21)  /*!< The WiFi connection is not associated */
-#define ESP_ERR_WIFI_TX_DISALLOW (ESP_ERR_WIFI_BASE + 22)  /*!< The WiFi TX is disallowed */
-#define ESP_ERR_WIFI_DISCARD     (ESP_ERR_WIFI_BASE + 23)  /*!< Discard frame */
-#define ESP_ERR_WIFI_ROC_IN_PROGRESS   (ESP_ERR_WIFI_BASE + 28)  /*!< ROC op is in progress */
+#define ESP_ERR_WIFI_POST              (ESP_ERR_WIFI_BASE + 18)  /*!< Failed to post the event to WiFi task */
+#define ESP_ERR_WIFI_INIT_STATE        (ESP_ERR_WIFI_BASE + 19)  /*!< Invalid WiFi state when init/deinit is called */
+#define ESP_ERR_WIFI_STOP_STATE        (ESP_ERR_WIFI_BASE + 20)  /*!< Returned when WiFi is stopping */
+#define ESP_ERR_WIFI_NOT_ASSOC         (ESP_ERR_WIFI_BASE + 21)  /*!< The WiFi connection is not associated */
+#define ESP_ERR_WIFI_TX_DISALLOW       (ESP_ERR_WIFI_BASE + 22)  /*!< The WiFi TX is disallowed */
 
+#define ESP_ERR_WIFI_TWT_FULL          (ESP_ERR_WIFI_BASE + 23)  /*!< no available flow id */
+#define ESP_ERR_WIFI_TWT_SETUP_TIMEOUT (ESP_ERR_WIFI_BASE + 24)  /*!< Timeout of receiving twt setup response frame, timeout times can be set during twt setup */
+#define ESP_ERR_WIFI_TWT_SETUP_TXFAIL  (ESP_ERR_WIFI_BASE + 25)  /*!< TWT setup frame tx failed */
+#define ESP_ERR_WIFI_TWT_SETUP_REJECT  (ESP_ERR_WIFI_BASE + 26)  /*!< The twt setup request was rejected by the AP */
+#define ESP_ERR_WIFI_DISCARD           (ESP_ERR_WIFI_BASE + 27)  /*!< Discard frame */
 
 /**
  * @brief WiFi stack configuration parameters passed to esp_wifi_init call.
  */
 typedef struct {
-    system_event_handler_t event_handler;          /**< WiFi event handler */
     wifi_osi_funcs_t*      osi_funcs;              /**< WiFi OS functions */
     wpa_crypto_funcs_t     wpa_crypto_funcs;       /**< WiFi station crypto functions when connect */
     int                    static_rx_buf_num;      /**< WiFi static RX buffer number */
@@ -116,20 +119,20 @@ typedef struct {
     int                    magic;                  /**< WiFi init magic number, it should be the last field */
 } wifi_init_config_t;
 
-#ifdef CONFIG_ESP32_WIFI_STATIC_TX_BUFFER_NUM
-#define WIFI_STATIC_TX_BUFFER_NUM CONFIG_ESP32_WIFI_STATIC_TX_BUFFER_NUM
+#ifdef CONFIG_ESP_WIFI_STATIC_TX_BUFFER_NUM
+#define WIFI_STATIC_TX_BUFFER_NUM CONFIG_ESP_WIFI_STATIC_TX_BUFFER_NUM
 #else
 #define WIFI_STATIC_TX_BUFFER_NUM 0
 #endif
 
-#if (CONFIG_ESP32_SPIRAM_SUPPORT || CONFIG_ESP32S2_SPIRAM_SUPPORT || CONFIG_ESP32S3_SPIRAM_SUPPORT)
-#define WIFI_CACHE_TX_BUFFER_NUM  CONFIG_ESP32_WIFI_CACHE_TX_BUFFER_NUM
+#if CONFIG_SPIRAM
+#define WIFI_CACHE_TX_BUFFER_NUM  CONFIG_ESP_WIFI_CACHE_TX_BUFFER_NUM
 #else
 #define WIFI_CACHE_TX_BUFFER_NUM  0
 #endif
 
-#ifdef CONFIG_ESP32_WIFI_DYNAMIC_TX_BUFFER_NUM
-#define WIFI_DYNAMIC_TX_BUFFER_NUM CONFIG_ESP32_WIFI_DYNAMIC_TX_BUFFER_NUM
+#ifdef CONFIG_ESP_WIFI_DYNAMIC_TX_BUFFER_NUM
+#define WIFI_DYNAMIC_TX_BUFFER_NUM CONFIG_ESP_WIFI_DYNAMIC_TX_BUFFER_NUM
 #else
 #define WIFI_DYNAMIC_TX_BUFFER_NUM 0
 #endif
@@ -140,31 +143,31 @@ typedef struct {
 #define WIFI_RX_MGMT_BUF_NUM_DEF 0
 #endif
 
-#if CONFIG_ESP32_WIFI_CSI_ENABLED
+#if CONFIG_ESP_WIFI_CSI_ENABLED
 #define WIFI_CSI_ENABLED         1
 #else
 #define WIFI_CSI_ENABLED         0
 #endif
 
-#if CONFIG_ESP32_WIFI_AMPDU_RX_ENABLED
+#if CONFIG_ESP_WIFI_AMPDU_RX_ENABLED
 #define WIFI_AMPDU_RX_ENABLED        1
 #else
 #define WIFI_AMPDU_RX_ENABLED        0
 #endif
 
-#if CONFIG_ESP32_WIFI_AMPDU_TX_ENABLED
+#if CONFIG_ESP_WIFI_AMPDU_TX_ENABLED
 #define WIFI_AMPDU_TX_ENABLED        1
 #else
 #define WIFI_AMPDU_TX_ENABLED        0
 #endif
 
-#if CONFIG_ESP32_WIFI_AMSDU_TX_ENABLED
+#if CONFIG_ESP_WIFI_AMSDU_TX_ENABLED
 #define WIFI_AMSDU_TX_ENABLED        1
 #else
 #define WIFI_AMSDU_TX_ENABLED        0
 #endif
 
-#if CONFIG_ESP32_WIFI_NVS_ENABLED
+#if CONFIG_ESP_WIFI_NVS_ENABLED
 #define WIFI_NVS_ENABLED          1
 #else
 #define WIFI_NVS_ENABLED          0
@@ -177,30 +180,29 @@ typedef struct {
 #endif
 
 extern const wpa_crypto_funcs_t g_wifi_default_wpa_crypto_funcs;
-extern uint64_t g_wifi_feature_caps;
 
 #define WIFI_INIT_CONFIG_MAGIC    0x1F2F3F4F
 
-#ifdef CONFIG_ESP32_WIFI_AMPDU_RX_ENABLED
-#define WIFI_DEFAULT_RX_BA_WIN CONFIG_ESP32_WIFI_RX_BA_WIN
+#ifdef CONFIG_ESP_WIFI_AMPDU_RX_ENABLED
+#define WIFI_DEFAULT_RX_BA_WIN CONFIG_ESP_WIFI_RX_BA_WIN
 #else
 #define WIFI_DEFAULT_RX_BA_WIN 0 /* unused if ampdu_rx_enable == false */
 #endif
 
-#if CONFIG_ESP32_WIFI_TASK_PINNED_TO_CORE_1
+#if CONFIG_ESP_WIFI_TASK_PINNED_TO_CORE_1
 #define WIFI_TASK_CORE_ID 1
 #else
 #define WIFI_TASK_CORE_ID 0
 #endif
 
-#ifdef CONFIG_ESP32_WIFI_SOFTAP_BEACON_MAX_LEN
-#define WIFI_SOFTAP_BEACON_MAX_LEN CONFIG_ESP32_WIFI_SOFTAP_BEACON_MAX_LEN
+#ifdef CONFIG_ESP_WIFI_SOFTAP_BEACON_MAX_LEN
+#define WIFI_SOFTAP_BEACON_MAX_LEN CONFIG_ESP_WIFI_SOFTAP_BEACON_MAX_LEN
 #else
 #define WIFI_SOFTAP_BEACON_MAX_LEN 752
 #endif
 
-#ifdef CONFIG_ESP32_WIFI_MGMT_SBUF_NUM
-#define WIFI_MGMT_SBUF_NUM CONFIG_ESP32_WIFI_MGMT_SBUF_NUM
+#ifdef CONFIG_ESP_WIFI_MGMT_SBUF_NUM
+#define WIFI_MGMT_SBUF_NUM CONFIG_ESP_WIFI_MGMT_SBUF_NUM
 #else
 #define WIFI_MGMT_SBUF_NUM 32
 #endif
@@ -211,18 +213,47 @@ extern uint64_t g_wifi_feature_caps;
 #define WIFI_STA_DISCONNECTED_PM_ENABLED false
 #endif
 
-#define CONFIG_FEATURE_WPA3_SAE_BIT     (1<<0)
+#if CONFIG_ESP_WIFI_ENABLE_WPA3_SAE
+#define WIFI_ENABLE_WPA3_SAE (1<<0)
+#else
+#define WIFI_ENABLE_WPA3_SAE 0
+#endif
+
+#if CONFIG_SPIRAM
+#define WIFI_ENABLE_SPIRAM (1<<1)
+#else
+#define WIFI_ENABLE_SPIRAM 0
+#endif
+
+#if CONFIG_ESP_WIFI_FTM_INITIATOR_SUPPORT
+#define WIFI_FTM_INITIATOR (1<<2)
+#else
+#define WIFI_FTM_INITIATOR 0
+#endif
+
+#if CONFIG_ESP_WIFI_FTM_RESPONDER_SUPPORT
+#define WIFI_FTM_RESPONDER (1<<3)
+#else
+#define WIFI_FTM_RESPONDER 0
+#endif
+
+#define CONFIG_FEATURE_WPA3_SAE_BIT (1<<0)
 #define CONFIG_FEATURE_CACHE_TX_BUF_BIT (1<<1)
 #define CONFIG_FEATURE_FTM_INITIATOR_BIT (1<<2)
 #define CONFIG_FEATURE_FTM_RESPONDER_BIT (1<<3)
 
+/* Set additional WiFi features and capabilities */
+#define WIFI_FEATURE_CAPS (WIFI_ENABLE_WPA3_SAE | \
+                           WIFI_ENABLE_SPIRAM  | \
+                           WIFI_FTM_INITIATOR | \
+                           WIFI_FTM_RESPONDER)
+
 #define WIFI_INIT_CONFIG_DEFAULT() { \
-    .event_handler = &esp_event_send_internal, \
     .osi_funcs = &g_wifi_osi_funcs, \
     .wpa_crypto_funcs = g_wifi_default_wpa_crypto_funcs, \
-    .static_rx_buf_num = CONFIG_ESP32_WIFI_STATIC_RX_BUFFER_NUM,\
-    .dynamic_rx_buf_num = CONFIG_ESP32_WIFI_DYNAMIC_RX_BUFFER_NUM,\
-    .tx_buf_type = CONFIG_ESP32_WIFI_TX_BUFFER_TYPE,\
+    .static_rx_buf_num = CONFIG_ESP_WIFI_STATIC_RX_BUFFER_NUM,\
+    .dynamic_rx_buf_num = CONFIG_ESP_WIFI_DYNAMIC_RX_BUFFER_NUM,\
+    .tx_buf_type = CONFIG_ESP_WIFI_TX_BUFFER_TYPE,\
     .static_tx_buf_num = WIFI_STATIC_TX_BUFFER_NUM,\
     .dynamic_tx_buf_num = WIFI_DYNAMIC_TX_BUFFER_NUM,\
     .rx_mgmt_buf_type = CONFIG_ESP_WIFI_DYNAMIC_RX_MGMT_BUF,\
@@ -238,7 +269,7 @@ extern uint64_t g_wifi_feature_caps;
     .wifi_task_core_id = WIFI_TASK_CORE_ID,\
     .beacon_max_len = WIFI_SOFTAP_BEACON_MAX_LEN, \
     .mgmt_sbuf_num = WIFI_MGMT_SBUF_NUM, \
-    .feature_caps = g_wifi_feature_caps, \
+    .feature_caps = WIFI_FEATURE_CAPS, \
     .sta_disconnected_pm = WIFI_STA_DISCONNECTED_PM_ENABLED,  \
     .espnow_max_encrypt_num = CONFIG_ESP_WIFI_ESPNOW_MAX_ENCRYPT_NUM, \
     .magic = WIFI_INIT_CONFIG_MAGIC\
@@ -280,7 +311,7 @@ esp_err_t esp_wifi_deinit(void);
 /**
   * @brief     Set the WiFi operating mode
   *
-  *            Set the WiFi operating mode as station, soft-AP or station+soft-AP,
+  *            Set the WiFi operating mode as station, soft-AP, station+soft-AP or NAN.
   *            The default mode is station mode.
   *
   * @param     mode  WiFi operating mode
@@ -307,14 +338,15 @@ esp_err_t esp_wifi_get_mode(wifi_mode_t *mode);
 
 /**
   * @brief  Start WiFi according to current configuration
-  *         If mode is WIFI_MODE_STA, it create station control block and start station
-  *         If mode is WIFI_MODE_AP, it create soft-AP control block and start soft-AP
-  *         If mode is WIFI_MODE_APSTA, it create soft-AP and station control block and start soft-AP and station
+  *         If mode is WIFI_MODE_STA, it creates station control block and starts station
+  *         If mode is WIFI_MODE_AP, it creates soft-AP control block and starts soft-AP
+  *         If mode is WIFI_MODE_APSTA, it creates soft-AP and station control block and starts soft-AP and station
+  *         If mode is WIFI_MODE_NAN, it creates NAN control block and starts NAN
   *
   * @return
   *    - ESP_OK: succeed
   *    - ESP_ERR_WIFI_NOT_INIT: WiFi is not initialized by esp_wifi_init
-  *    - ESP_ERR_INVALID_ARG: invalid argument
+  *    - ESP_ERR_INVALID_ARG: It doesn't normally happen, the function called inside the API was passed invalid argument, user should check if the wifi related config is correct
   *    - ESP_ERR_NO_MEM: out of memory
   *    - ESP_ERR_WIFI_CONN: WiFi internal error, station or soft-AP control block wrong
   *    - ESP_FAIL: other WiFi internal errors
@@ -323,9 +355,10 @@ esp_err_t esp_wifi_start(void);
 
 /**
   * @brief  Stop WiFi
-  *         If mode is WIFI_MODE_STA, it stop station and free station control block
-  *         If mode is WIFI_MODE_AP, it stop soft-AP and free soft-AP control block
-  *         If mode is WIFI_MODE_APSTA, it stop station/soft-AP and free station/soft-AP control block
+  *         If mode is WIFI_MODE_STA, it stops station and frees station control block
+  *         If mode is WIFI_MODE_AP, it stops soft-AP and frees soft-AP control block
+  *         If mode is WIFI_MODE_APSTA, it stops station/soft-AP and frees station/soft-AP control block
+  *         If mode is WIFI_MODE_NAN, it stops NAN and frees NAN control block
   *
   * @return
   *    - ESP_OK: succeed
@@ -349,12 +382,12 @@ esp_err_t esp_wifi_stop(void);
 esp_err_t esp_wifi_restore(void);
 
 /**
-  * @brief     Connect the ESP32 WiFi station to the AP.
+  * @brief     Connect WiFi station to the AP.
   *
   * @attention 1. This API only impact WIFI_MODE_STA or WIFI_MODE_APSTA mode
-  * @attention 2. If the ESP32 is connected to an AP, call esp_wifi_disconnect to disconnect.
-  * @attention 3. The scanning triggered by esp_wifi_scan_start() will not be effective until connection between ESP32 and the AP is established.
-  *               If ESP32 is scanning and connecting at the same time, ESP32 will abort scanning and return a warning message and error
+  * @attention 2. If station interface is connected to an AP, call esp_wifi_disconnect to disconnect.
+  * @attention 3. The scanning triggered by esp_wifi_scan_start() will not be effective until connection between device and the AP is established.
+  *               If device is scanning and connecting at the same time, it will abort scanning and return a warning message and error
   *               number ESP_ERR_WIFI_STATE.
   * @attention 4. This API attempts to connect to an Access Point (AP) only once. To enable reconnection in case of a connection failure, please use
   *               the 'failure_retry_cnt' feature in the 'wifi_sta_config_t'. Users are suggested to implement reconnection logic in their application
@@ -370,7 +403,7 @@ esp_err_t esp_wifi_restore(void);
 esp_err_t esp_wifi_connect(void);
 
 /**
-  * @brief     Disconnect the ESP32 WiFi station from the AP.
+  * @brief     Disconnect WiFi station from the AP.
   *
   * @return
   *    - ESP_OK: succeed
@@ -407,9 +440,9 @@ esp_err_t esp_wifi_deauth_sta(uint16_t aid);
 /**
   * @brief     Scan all available APs.
   *
-  * @attention If this API is called, the found APs are stored in WiFi driver dynamic allocated memory and the
-  *            will be freed in esp_wifi_scan_get_ap_records, so generally, call esp_wifi_scan_get_ap_records to cause
-  *            the memory to be freed once the scan is done
+  * @attention If this API is called, the found APs are stored in WiFi driver dynamic allocated memory. And then
+  *            can be freed in esp_wifi_scan_get_ap_records(), esp_wifi_scan_get_ap_record() or esp_wifi_clear_ap_list(),
+  *            so call any one to free the memory once the scan is done.
   * @attention The values of maximum active scan time and passive scan time per channel are limited to 1500 milliseconds.
   *            Values above 1500ms may cause station to disconnect from AP and are not recommended.
   *
@@ -456,7 +489,9 @@ esp_err_t esp_wifi_scan_stop(void);
 esp_err_t esp_wifi_scan_get_ap_num(uint16_t *number);
 
 /**
-  * @brief     Get AP list found in last scan
+  * @brief     Get AP list found in last scan.
+  *
+  * @attention  This API will free all memory occupied by scanned AP list.
   *
   * @param[inout]  number As input param, it stores max AP number ap_records can hold.
   *                As output param, it receives the actual AP number this API returns.
@@ -471,24 +506,43 @@ esp_err_t esp_wifi_scan_get_ap_num(uint16_t *number);
   */
 esp_err_t esp_wifi_scan_get_ap_records(uint16_t *number, wifi_ap_record_t *ap_records);
 
+/**
+ * @brief      Get one AP record from the scanned AP list.
+ *
+ * @attention  Different from esp_wifi_scan_get_ap_records(), this API only gets one AP record
+ *             from the scanned AP list each time. This API will free the memory of one AP record,
+ *             if the user doesn't get all records in the scannned AP list, then needs to call esp_wifi_clear_ap_list()
+ *             to free the remaining memory.
+ *
+ * @param[out] ap_record  pointer to one AP record
+ *
+ * @return
+ *    - ESP_OK: succeed
+ *    - ESP_ERR_WIFI_NOT_INIT: WiFi is not initialized by esp_wifi_init
+ *    - ESP_ERR_WIFI_NOT_STARTED: WiFi is not started by esp_wifi_start
+ *    - ESP_ERR_INVALID_ARG: invalid argument
+ *    - ESP_FAIL: scan APs is NULL, means all AP records fetched or no AP found
+ */
+esp_err_t esp_wifi_scan_get_ap_record(wifi_ap_record_t *ap_record);
 
 /**
   * @brief     Clear AP list found in last scan
   *
-  * @attention When the obtained ap list fails,bss info must be cleared,otherwise it may cause memory leakage.
+  * @attention This API will free all memory occupied by scanned AP list.
+  *            When the obtained AP list fails, AP records must be cleared,otherwise it may cause memory leakage.
   *
   * @return
   *    - ESP_OK: succeed
   *    - ESP_ERR_WIFI_NOT_INIT: WiFi is not initialized by esp_wifi_init
   *    - ESP_ERR_WIFI_NOT_STARTED: WiFi is not started by esp_wifi_start
   *    - ESP_ERR_WIFI_MODE: WiFi mode is wrong
-  *    - ESP_ERR_INVALID_ARG: invalid argument
+  *    - ESP_ERR_INVALID_ARG: It doesn't normally happen, the function called inside the API was passed invalid argument, user should check if the wifi related config is correct
   */
 esp_err_t esp_wifi_clear_ap_list(void);
 
 
 /**
-  * @brief     Get information of AP which the ESP32 station is associated with
+  * @brief     Get information of AP to which the device is associated with
   *
   * @attention When the obtained country information is empty, it means that the AP does not carry country information
   *
@@ -528,9 +582,10 @@ esp_err_t esp_wifi_get_ps(wifi_ps_type_t *type);
 
 /**
   * @brief     Set protocol type of specified interface
-  *            The default protocol is (WIFI_PROTOCOL_11B|WIFI_PROTOCOL_11G|WIFI_PROTOCOL_11N)
+  *            The default protocol is (WIFI_PROTOCOL_11B|WIFI_PROTOCOL_11G|WIFI_PROTOCOL_11N).
+  *            if CONFIG_SOC_WIFI_HE_SUPPORT, the default protocol is (WIFI_PROTOCOL_11B|WIFI_PROTOCOL_11G|WIFI_PROTOCOL_11N|WIFI_PROTOCOL_11AX).
   *
-  * @attention Support 802.11b or 802.11bg or 802.11bgn or LR mode
+  * @attention Support 802.11b or 802.11bg or 802.11bgn or 802.11bgnax or LR mode
   *
   * @param     ifx  interfaces
   * @param     protocol_bitmap  WiFi protocol bitmap
@@ -559,7 +614,7 @@ esp_err_t esp_wifi_set_protocol(wifi_interface_t ifx, uint8_t protocol_bitmap);
 esp_err_t esp_wifi_get_protocol(wifi_interface_t ifx, uint8_t *protocol_bitmap);
 
 /**
-  * @brief     Set the bandwidth of ESP32 specified interface
+  * @brief     Set the bandwidth of specified interface
   *
   * @attention 1. API return false if try to configure an interface that is not enabled
   * @attention 2. WIFI_BW_HT40 is supported only when the interface support 11N
@@ -577,7 +632,7 @@ esp_err_t esp_wifi_get_protocol(wifi_interface_t ifx, uint8_t *protocol_bitmap);
 esp_err_t esp_wifi_set_bandwidth(wifi_interface_t ifx, wifi_bandwidth_t bw);
 
 /**
-  * @brief     Get the bandwidth of ESP32 specified interface
+  * @brief     Get the bandwidth of specified interface
   *
   * @attention 1. API return false if try to get a interface that is not enable
   *
@@ -593,12 +648,12 @@ esp_err_t esp_wifi_set_bandwidth(wifi_interface_t ifx, wifi_bandwidth_t bw);
 esp_err_t esp_wifi_get_bandwidth(wifi_interface_t ifx, wifi_bandwidth_t *bw);
 
 /**
-  * @brief     Set primary/secondary channel of ESP32
+  * @brief     Set primary/secondary channel of device
   *
   * @attention 1. This API should be called after esp_wifi_start() and before esp_wifi_stop()
-  * @attention 2. When ESP32 is in STA mode, this API should not be called when STA is scanning or connecting to an external AP
-  * @attention 3. When ESP32 is in softAP mode, this API should not be called when softAP has connected to external STAs
-  * @attention 4. When ESP32 is in STA+softAP mode, this API should not be called when in the scenarios described above
+  * @attention 2. When device is in STA mode, this API should not be called when STA is scanning or connecting to an external AP
+  * @attention 3. When device is in softAP mode, this API should not be called when softAP has connected to external STAs
+  * @attention 4. When device is in STA+softAP mode, this API should not be called when in the scenarios described above
   * @attention 5. The channel info set by this API will not be stored in NVS. So If you want to remeber the channel used before wifi stop,
   *               you need to call this API again after wifi start, or you can call `esp_wifi_set_config()` to store the channel info in NVS.
   *
@@ -615,7 +670,7 @@ esp_err_t esp_wifi_get_bandwidth(wifi_interface_t ifx, wifi_bandwidth_t *bw);
 esp_err_t esp_wifi_set_channel(uint8_t primary, wifi_second_chan_t second);
 
 /**
-  * @brief     Get the primary/secondary channel of ESP32
+  * @brief     Get the primary/secondary channel of device
   *
   * @attention 1. API return false if try to get a interface that is not enable
   *
@@ -635,7 +690,7 @@ esp_err_t esp_wifi_get_channel(uint8_t *primary, wifi_second_chan_t *second);
   * @attention 1. It is discouraged to call this API since this doesn't validate the per-country rules,
   *               it's up to the user to fill in all fields according to local regulations.
   *               Please use esp_wifi_set_country_code instead.
-  * @attention 2. The default country is CHINA {.cc="CN", .schan=1, .nchan=13, .policy=WIFI_COUNTRY_POLICY_AUTO}.
+  * @attention 2. The default country is "01" (world safe mode) {.cc="01", .schan=1, .nchan=11, .policy=WIFI_COUNTRY_POLICY_AUTO}.
   * @attention 3. The third octet of country code string is one of the following: ' ', 'O', 'I', 'X', otherwise it is considered as ' '.
   * @attention 4. When the country policy is WIFI_COUNTRY_POLICY_AUTO, the country info of the AP to which
   *               the station is connected is used. E.g. if the configured country info is {.cc="US", .schan=1, .nchan=11}
@@ -673,11 +728,11 @@ esp_err_t esp_wifi_get_country(wifi_country_t *country);
 
 
 /**
-  * @brief     Set MAC address of the ESP32 WiFi station or the soft-AP interface.
+  * @brief     Set MAC address of WiFi station, soft-AP or NAN interface.
   *
   * @attention 1. This API can only be called when the interface is disabled
-  * @attention 2. ESP32 soft-AP and station have different MAC addresses, do not set them to be the same.
-  * @attention 3. The bit 0 of the first byte of ESP32 MAC address can not be 1. For example, the MAC address
+  * @attention 2. Above mentioned interfaces have different MAC addresses, do not set them to be the same.
+  * @attention 3. The bit 0 of the first byte of MAC address can not be 1. For example, the MAC address
   *      can set to be "1a:XX:XX:XX:XX:XX", but can not be "15:XX:XX:XX:XX:XX".
   *
   * @param     ifx  interface
@@ -805,16 +860,16 @@ esp_err_t esp_wifi_set_promiscuous_ctrl_filter(const wifi_promiscuous_filter_t *
 esp_err_t esp_wifi_get_promiscuous_ctrl_filter(wifi_promiscuous_filter_t *filter);
 
 /**
-  * @brief     Set the configuration of the ESP32 STA or AP
+  * @brief     Set the configuration of the STA, AP or NAN
   *
   * @attention 1. This API can be called only when specified interface is enabled, otherwise, API fail
   * @attention 2. For station configuration, bssid_set needs to be 0; and it needs to be 1 only when users need to check the MAC address of the AP.
-  * @attention 3. ESP32 is limited to only one channel, so when in the soft-AP+station mode, the soft-AP will adjust its channel automatically to be the same as
-  *               the channel of the ESP32 station.
-  * @attention 4. The configuration will be stored in NVS
+  * @attention 3. ESP devices are limited to only one channel, so when in the soft-AP+station mode, the soft-AP will adjust its channel automatically to be the same as
+  *               the channel of the station.
+  * @attention 4. The configuration will be stored in NVS for station and soft-AP
   *
   * @param     interface  interface
-  * @param     conf  station or soft-AP configuration
+  * @param     conf  station, soft-AP or NAN configuration
   *
   * @return
   *    - ESP_OK: succeed
@@ -1136,7 +1191,7 @@ esp_err_t esp_wifi_get_ant(wifi_ant_config_t *config);
 int64_t esp_wifi_get_tsf_time(wifi_interface_t interface);
 
 /**
-  * @brief     Set the inactive time of the ESP32 STA or AP
+  * @brief     Set the inactive time of the STA or AP
   *
   * @attention 1. For Station, If the station does not receive a beacon frame from the connected SoftAP during the inactive time,
   *               disconnect from SoftAP. Default 6s.
@@ -1238,6 +1293,26 @@ esp_err_t esp_wifi_ftm_end_session(void);
 esp_err_t esp_wifi_ftm_resp_set_offset(int16_t offset_cm);
 
 /**
+  * @brief      Get FTM measurements report copied into a user provided buffer.
+  *
+  * @attention  1. To get the FTM report, user first needs to allocate a buffer of size
+  *                (sizeof(wifi_ftm_report_entry_t) * num_entries) where the API will fill up to num_entries
+  *                valid FTM measurements in the buffer. Total number of entries can be found in the event
+  *                WIFI_EVENT_FTM_REPORT as ftm_report_num_entries
+  * @attention  2. The internal FTM report is freed upon use of this API which means the API can only be used
+  *                once afer every FTM session initiated
+  * @attention  3. Passing the buffer as NULL merely frees the FTM report
+  *
+  * @param      report  Pointer to the buffer for receiving the FTM report
+  * @param      num_entries Number of FTM report entries to be filled in the report
+  *
+  * @return
+  *    - ESP_OK: succeed
+  *    - others: failed
+  */
+esp_err_t esp_wifi_ftm_get_report(wifi_ftm_report_entry_t *report, uint8_t num_entries);
+
+/**
   * @brief      Enable or disable 11b rate of specified interface
   *
   * @attention  1. This API should be called after esp_wifi_init() and before esp_wifi_start().
@@ -1252,17 +1327,20 @@ esp_err_t esp_wifi_ftm_resp_set_offset(int16_t offset_cm);
   */
 esp_err_t esp_wifi_config_11b_rate(wifi_interface_t ifx, bool disable);
 
+#define ESP_WIFI_CONNECTIONLESS_INTERVAL_DEFAULT_MODE 0
 /**
-  * @brief      Set interval for station to wake up periodically at disconnected.
+  * @brief      Set wake interval for connectionless modules to wake up periodically.
   *
-  * @attention 1. Only when ESP_WIFI_STA_DISCONNECTED_PM_ENABLE is enabled, this configuration could work
-  * @attention 2. This configuration only work for station mode and disconnected status
-  * @attention 3. This configuration would influence nothing until some module configure wake_window
-  * @attention 4. A sensible interval which is not too small is recommended (e.g. 100ms)
+  * @attention 1. Only one wake interval for all connectionless modules.
+  * @attention 2. This configuration could work at connected status.
+  *               When ESP_WIFI_STA_DISCONNECTED_PM_ENABLE is enabled, this configuration could work at disconnected status.
+  * @attention 3. Event WIFI_EVENT_CONNECTIONLESS_MODULE_WAKE_INTERVAL_START would be posted each time wake interval starts.
+  * @attention 4. Recommend to configure interval in multiples of hundred. (e.g. 100ms)
+  * @attention 5. Recommend to configure interval to ESP_WIFI_CONNECTIONLESS_INTERVAL_DEFAULT_MODE to get stable performance at coexistence mode.
   *
-  * @param      interval  how much milliseconds would the chip wake up, from 1 to 65535.
+  * @param      wake_interval  Milliseconds after would the chip wake up, from 1 to 65535.
   */
-esp_err_t esp_wifi_set_connectionless_wake_interval(uint16_t interval);
+esp_err_t esp_wifi_connectionless_module_set_wake_interval(uint16_t wake_interval);
 
 /**
   * @brief      Request extra reference of Wi-Fi radio.
@@ -1311,7 +1389,7 @@ esp_err_t esp_wifi_force_wakeup_release(void);
   *               "RO","SE","SI","SK","TW","US"
   *
   * @attention 7. When country code "01" (world safe mode) is set, SoftAP mode won't contain country IE.
-  * @attention 8. The default country is "CN" and ieee80211d_enabled is TRUE.
+  * @attention 8. The default country is "01" (world safe mode) and ieee80211d_enabled is TRUE.
   * @attention 9. The third octet of country code string is one of the following: ' ', 'O', 'I', 'X', otherwise it is considered as ' '.
   *
   * @param     country   the configured country ISO code
@@ -1386,6 +1464,19 @@ esp_err_t esp_wifi_sta_get_aid(uint16_t *aid);
 esp_err_t esp_wifi_sta_get_negotiated_phymode(wifi_phy_mode_t *phymode);
 
 /**
+  * @brief      Config dynamic carrier sense
+  *
+  * @attention  This API should be called after esp_wifi_start().
+  *
+  * @param      enabled Dynamic carrier sense is enabled or not.
+  *
+  * @return
+  *    - ESP_OK: succeed
+  *    - others: failed
+  */
+esp_err_t esp_wifi_set_dynamic_cs(bool enabled);
+
+/**
   * @brief      Get the rssi info after station connected to AP
   *
   * @attention  This API should be called after station connected to AP.
@@ -1398,6 +1489,21 @@ esp_err_t esp_wifi_sta_get_negotiated_phymode(wifi_phy_mode_t *phymode);
   *    - ESP_FAIL: failed
   */
 esp_err_t esp_wifi_sta_get_rssi(int *rssi);
+
+#if CONFIG_ESP_COEX_POWER_MANAGEMENT
+/**
+  * @brief      Enable Wi-Fi coexistence power management
+  *
+  * @attention  This API should be called after esp_wifi_init().
+  *
+  * @param      enabled Wi-Fi coexistence power management is enabled or not.
+  *
+  * @return
+  *    - ESP_OK: succeed
+  *    - others: failed
+  */
+esp_err_t esp_wifi_coex_pwr_configure(bool enabled);
+#endif
 
 #ifdef __cplusplus
 }

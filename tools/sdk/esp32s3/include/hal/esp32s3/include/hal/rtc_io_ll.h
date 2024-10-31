@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: 2015-2021 Espressif Systems (Shanghai) CO LTD
+ * SPDX-FileCopyrightText: 2015-2024 Espressif Systems (Shanghai) CO LTD
  *
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -13,19 +13,17 @@
 #pragma once
 
 #include <stdlib.h>
-#include "soc/rtc_io_periph.h"
-#include "soc/rtc_io_struct.h"
-#include "hal/rtc_io_types.h"
+#include "soc/rtc_periph.h"
 #include "hal/gpio_types.h"
 #include "soc/io_mux_reg.h"
 #include "soc/usb_serial_jtag_reg.h"
 #include "soc/usb_serial_jtag_struct.h"
 
-#define RTCIO_LL_PIN_FUNC     0
-
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+#define RTCIO_LL_PIN_FUNC     0
 
 typedef enum {
     RTCIO_FUNC_RTC = 0x0,         /*!< The pin controled by RTC module. */
@@ -145,7 +143,12 @@ static inline uint32_t rtcio_ll_get_level(int rtcio_num)
 static inline void rtcio_ll_set_drive_capability(int rtcio_num, uint32_t strength)
 {
     if (rtc_io_desc[rtcio_num].drv_v) {
-        SET_PERI_REG_BITS(rtc_io_desc[rtcio_num].reg, rtc_io_desc[rtcio_num].drv_v, strength, rtc_io_desc[rtcio_num].drv_s);
+        uint32_t drv_cap = strength;
+        // DRV = 1 and DRV = 2 register bits are flipped for IO17, IO18 on the target
+        if (rtcio_num == RTCIO_GPIO17_CHANNEL || rtcio_num == RTCIO_GPIO18_CHANNEL) {
+            drv_cap = ((drv_cap & 0x1) << 1) | ((drv_cap & 0x2) >> 1); // swap bit0 and bit1
+        }
+        SET_PERI_REG_BITS(rtc_io_desc[rtcio_num].reg, rtc_io_desc[rtcio_num].drv_v, drv_cap, rtc_io_desc[rtcio_num].drv_s);
     }
 }
 
@@ -157,7 +160,12 @@ static inline void rtcio_ll_set_drive_capability(int rtcio_num, uint32_t strengt
  */
 static inline uint32_t rtcio_ll_get_drive_capability(int rtcio_num)
 {
-    return GET_PERI_REG_BITS2(rtc_io_desc[rtcio_num].reg, rtc_io_desc[rtcio_num].drv_v, rtc_io_desc[rtcio_num].drv_s);
+    uint32_t strength = GET_PERI_REG_BITS2(rtc_io_desc[rtcio_num].reg, rtc_io_desc[rtcio_num].drv_v, rtc_io_desc[rtcio_num].drv_s);
+    // DRV = 1 and DRV = 2 register bits are flipped for IO17, IO18 on the target
+    if (rtcio_num == RTCIO_GPIO17_CHANNEL || rtcio_num == RTCIO_GPIO18_CHANNEL) {
+        strength = ((strength & 0x1) << 1) | ((strength & 0x2) >> 1); // swap bit0 and bit1
+    }
+    return strength;
 }
 
 /**
@@ -320,7 +328,7 @@ static inline void rtcio_ll_enable_output_in_sleep(gpio_num_t gpio_num)
  *
  * @param rtcio_num The index of rtcio. 0 ~ MAX(rtcio).
  */
-static inline void rtcio_ll_in_sleep_disable_output(gpio_num_t gpio_num)
+static inline void rtcio_ll_disable_output_in_sleep(gpio_num_t gpio_num)
 {
     if (rtc_io_desc[gpio_num].slpoe) {
         CLEAR_PERI_REG_MASK(rtc_io_desc[gpio_num].reg, rtc_io_desc[gpio_num].slpoe);
@@ -332,7 +340,7 @@ static inline void rtcio_ll_in_sleep_disable_output(gpio_num_t gpio_num)
  *
  * @param rtcio_num The index of rtcio. 0 ~ MAX(rtcio).
  */
-static inline void rtcio_ll_in_sleep_enable_input(gpio_num_t gpio_num)
+static inline void rtcio_ll_enable_input_in_sleep(gpio_num_t gpio_num)
 {
     SET_PERI_REG_MASK(rtc_io_desc[gpio_num].reg, rtc_io_desc[gpio_num].slpie);
 }
@@ -342,7 +350,7 @@ static inline void rtcio_ll_in_sleep_enable_input(gpio_num_t gpio_num)
  *
  * @param rtcio_num The index of rtcio. 0 ~ MAX(rtcio).
  */
-static inline void rtcio_ll_in_sleep_disable_input(gpio_num_t gpio_num)
+static inline void rtcio_ll_disable_input_in_sleep(gpio_num_t gpio_num)
 {
     CLEAR_PERI_REG_MASK(rtc_io_desc[gpio_num].reg, rtc_io_desc[gpio_num].slpie);
 }
@@ -367,6 +375,12 @@ static inline void rtcio_ll_disable_sleep_setting(gpio_num_t gpio_num)
     CLEAR_PERI_REG_MASK(rtc_io_desc[gpio_num].reg, rtc_io_desc[gpio_num].slpsel);
 }
 
+/**
+ * Set specific logic level on an RTC IO pin as a wakeup trigger.
+ *
+ * @param rtcio_num The index of rtcio. 0 ~ MAX(rtcio).
+ * @param level Logic level (0)
+ */
 static inline void rtcio_ll_ext0_set_wakeup_pin(int rtcio_num, int level)
 {
     REG_SET_FIELD(RTC_IO_EXT_WAKEUP0_REG, RTC_IO_EXT_WAKEUP0_SEL, rtcio_num);
